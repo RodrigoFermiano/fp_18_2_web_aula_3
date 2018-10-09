@@ -6,22 +6,36 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using fp_stack.core.Models;
+using Newtonsoft.Json;
+using System.Net.Http;
+using fp_stack.web.APIHelper;
 
 namespace fp_stack.web.Controllers
 {
     public class PerguntasController : Controller
     {
         private readonly Context _context;
+        private const string CONTROLLER = "perguntas";
+
 
         public PerguntasController(Context context)
         {
             _context = context;
+           
         }
 
         // GET: Perguntas
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Perguntas.ToListAsync());
+            
+            var client = new ApiHelper().ObterHttClient();
+            string url = new ApiHelper().ObterUrl(CONTROLLER);
+
+            var response = await client.GetStringAsync(url);
+            var Perguntas = JsonConvert.DeserializeObject<List<Pergunta>>(response);
+           
+
+            return View(Perguntas.ToList());
         }
 
         // GET: Perguntas/Details/5
@@ -32,8 +46,18 @@ namespace fp_stack.web.Controllers
                 return NotFound();
             }
 
-            var pergunta = await _context.Perguntas
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var client = new ApiHelper().ObterHttClient();
+
+
+            string url = new ApiHelper().ObterUrl(CONTROLLER);
+
+            var response = await client.GetStringAsync(url);
+
+            var Perguntas = JsonConvert.DeserializeObject<List<Pergunta>>(response);
+
+
+            var pergunta = Perguntas
+                .FirstOrDefault(m => m.Id == id);
             if (pergunta == null)
             {
                 return NotFound();
